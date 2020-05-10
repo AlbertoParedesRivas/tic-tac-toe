@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.22.2 -->
+<interface>
+  <requires lib="gtk+" version="3.20"/>
+  <object class="GtkWindow" id="acercaDe">
+    <property name="can_focus">False</property>
+    <property name="border_width">10</property>
+    <property name="default_width">440</property>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
+    <child>
+      <object class="GtkBox">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
+        <property name="homogeneous">True</property>
+        <child>
+          <object class="GtkLabel" id="labelAcercaDe1">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Juego de Gato</property>
+            <property name="justify">center</property>
+            <attributes>
+              <attribute name="font-desc" value="Sans 30"/>
+              <attribute name="style" value="normal"/>
+              <attribute name="weight" value="thin"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="labelAcercaDe2">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Desarrollado por:
+Perla Hernández Cardoso
+Areli Rabner Concha</property>
+            <property name="justify">center</property>
+            <attributes>
+              <attribute name="font-desc" value="Sans 20"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="labelAcercaDe3">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Programación Aplicada
+Semestre primavera 2020</property>
+            <property name="justify">center</property>
+            <attributes>
+              <attribute name="font-desc" value="Sans 16"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

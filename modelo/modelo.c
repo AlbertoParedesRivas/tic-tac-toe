@@ -52,6 +52,41 @@ estadoJuego obtenerEstadoDelJuego(const gchar *tablero, gint *bloquesGanadores)
     return estado;
 }
 
+void registrarHistorial(struct nodoHistorial **historial, gchar tablero[9], int *idTablero)
+{
+    if ((*historial) == NULL)
+    {
+        (*historial) = (struct nodoHistorial *)malloc(sizeof(struct nodoHistorial));
+        (*historial)->id = 1;
+        (*historial)->anterior = NULL;
+        (*historial)->siguiente = NULL;
+        memcpy((*historial)->tablero, tablero, sizeof(gchar) * 9);
+        return;
+    }
+
+    struct nodoHistorial *temporal = (*historial);
+    struct nodoHistorial *temporalDos = NULL;
+
+    while (temporal)
+    {
+        if (temporal->siguiente == NULL)
+        {
+            temporalDos = (struct nodoHistorial *)malloc(sizeof(struct nodoHistorial));
+            temporalDos->id = temporal->id + 1;
+            memcpy(temporalDos->tablero, tablero, sizeof(gchar) * 9);
+            temporalDos->anterior = temporal;
+            temporalDos->siguiente = NULL;
+            temporal->siguiente = temporalDos;
+            break;
+        }
+        else
+        {
+            temporal = temporal->siguiente;
+        }
+    }
+    (*idTablero) = temporalDos->id;
+}
+
 static gint revisarGanador(const gint combinacionesGanadoras[][3], const gint tamano, const gchar jugadorProbado, const char *tablero, gint *bloquesGanadores)
 {
     gint i, j;
@@ -83,7 +118,7 @@ static gboolean tableroLleno(const gchar *tablero)
 
     for (i = 0; i < 9; i++)
     {
-        if (tablero[i] == 0)
+        if (tablero[i] == '-')
         {
             return FALSE;
         }

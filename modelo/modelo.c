@@ -3,6 +3,7 @@
 
 static gint revisarGanador(const gint combinacionesGanadoras[][3], const gint tamano, const gchar jugadorProbado, const char *tablero, gint *bloquesGanadores);
 static gboolean tableroLleno(const gchar *tablero);
+static void mostrarTableroA(gchar[]);
 
 const gint combinacionesGanadorasHorizontales[3][3] = {{0, 1, 2}, {3, 4, 5}, {6, 7, 8}};
 const gint combinacionesGanadorasVerticales[3][3] = {{0, 3, 6}, {1, 4, 7}, {2, 5, 8}};
@@ -52,7 +53,36 @@ estadoJuego obtenerEstadoDelJuego(const gchar *tablero, gint *bloquesGanadores)
     return estado;
 }
 
-void registrarHistorial(struct nodoHistorial **historial, gchar tablero[9], int *idTablero)
+static void mostrarTableroA(gchar tablero[9])
+{
+    int c = 0;
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            printf("%c", tablero[c]);
+            c++;
+        }
+        printf("\n");
+    }
+}
+
+void mostrarHistorial(struct nodoHistorial *historial)
+{
+    if (!historial)
+    {
+        printf("Historial vacio\n");
+    }
+    struct nodoHistorial *temporal = historial;
+    while (temporal)
+    {
+        printf("id:%d\n", temporal->id);
+        mostrarTableroA(temporal->tablero);
+        temporal = temporal->siguiente;
+    }
+}
+
+void registrarHistorial(struct nodoHistorial **historial, gchar tablero[9], int *idTablero, int *tamanoHistorial, gboolean turno, estadoJuego estado)
 {
     if ((*historial) == NULL)
     {
@@ -60,23 +90,97 @@ void registrarHistorial(struct nodoHistorial **historial, gchar tablero[9], int 
         (*historial)->id = 1;
         (*historial)->anterior = NULL;
         (*historial)->siguiente = NULL;
+        (*historial)->turno = turno;
+        (*historial)->estado = JUGANDO;
         memcpy((*historial)->tablero, tablero, sizeof(gchar) * 9);
+        (*idTablero) = (*idTablero) + 1;
+        (*tamanoHistorial) = (*tamanoHistorial) + 1;
         return;
     }
 
     struct nodoHistorial *temporal = (*historial);
-    struct nodoHistorial *temporalDos = NULL;
+    struct nodoHistorial *temporalDos = NULL, *temporalEliminar = NULL;
 
+    if ((*idTablero) == (*tamanoHistorial))
+    {
+        while (temporal)
+        {
+            if (temporal->siguiente == NULL)
+            {
+                temporalDos = (struct nodoHistorial *)malloc(sizeof(struct nodoHistorial));
+                temporalDos->id = temporal->id + 1;
+                memcpy(temporalDos->tablero, tablero, sizeof(gchar) * 9);
+                temporalDos->anterior = temporal;
+                temporalDos->siguiente = NULL;
+                temporalDos->turno = turno;
+                temporalDos->estado = estado; 
+                temporal->siguiente = temporalDos;
+                break;
+            }
+            else
+            {
+                temporal = temporal->siguiente;
+            }
+        }
+        (*idTablero) = (*idTablero) + 1;
+        (*tamanoHistorial) = (*tamanoHistorial) + 1;
+    }
+    else if ((*idTablero) < (*tamanoHistorial))
+    {
+        while (temporal)
+        {
+            if (temporal->siguiente == NULL)
+            {
+                do
+                {
+                    if (temporal->id == (*idTablero))
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        temporalEliminar = temporal;
+                        temporal = temporal->anterior;
+                        temporal->siguiente = NULL;
+                        free(temporalEliminar);
+                    }
+                } while (temporal);
+                temporalDos = (struct nodoHistorial *)malloc(sizeof(struct nodoHistorial));
+                temporalDos->id = temporal->id + 1;
+                memcpy(temporalDos->tablero, tablero, sizeof(gchar) * 9);
+                temporalDos->anterior = temporal;
+                temporalDos->siguiente = NULL;
+                temporalDos->turno = turno;
+                temporalDos->estado = estado;
+                temporal->siguiente = temporalDos;
+                break;
+            }
+            else
+            {
+                temporal = temporal->siguiente;
+            }
+        }
+        (*idTablero) = (*idTablero) + 1;
+        (*tamanoHistorial) = (*idTablero);
+    }
+}
+
+void recuperarTablero(struct nodoHistorial *historial, gchar (*tablero)[9], gboolean *turno, estadoJuego *estado, const int idTablero){
+    struct nodoHistorial *temporal = historial;
+    if (historial == NULL)
+    {
+        return;
+    }
     while (temporal)
     {
-        if (temporal->siguiente == NULL)
+        if (temporal->id == idTablero)
         {
-            temporalDos = (struct nodoHistorial *)malloc(sizeof(struct nodoHistorial));
-            temporalDos->id = temporal->id + 1;
-            memcpy(temporalDos->tablero, tablero, sizeof(gchar) * 9);
-            temporalDos->anterior = temporal;
-            temporalDos->siguiente = NULL;
-            temporal->siguiente = temporalDos;
+            for (int i = 0; i < 9; i++)
+            {
+                (*tablero)[i] = temporal->tablero[i];
+            }
+            (*turno) = temporal->turno;
+            (*estado) = temporal->estado;
             break;
         }
         else
@@ -84,7 +188,42 @@ void registrarHistorial(struct nodoHistorial **historial, gchar tablero[9], int 
             temporal = temporal->siguiente;
         }
     }
-    (*idTablero) = temporalDos->id;
+}
+
+void limpiarHistorial(struct nodoHistorial **historial, int *idTablero, int *tamanoHistorial)
+{
+    struct nodoHistorial *temporal = (*historial), *temporalEliminar = NULL;
+    if ((*tamanoHistorial) != 1)
+    {
+        while (temporal)
+        {
+            if (temporal->siguiente == NULL)
+            {
+                do
+                {
+                    if (temporal->id == 1)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        temporalEliminar = temporal;
+                        temporal = temporal->anterior;
+                        temporal->siguiente = NULL;
+                        free(temporalEliminar);
+                    }
+                } while (temporal);
+                break;
+            }
+            else
+            {
+                temporal = temporal->siguiente;
+            }
+        }
+        (*idTablero) = 1;
+        (*tamanoHistorial) = 1;
+    }
+    
 }
 
 static gint revisarGanador(const gint combinacionesGanadoras[][3], const gint tamano, const gchar jugadorProbado, const char *tablero, gint *bloquesGanadores)

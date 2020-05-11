@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 typedef enum
 {
@@ -28,5 +29,6 @@ void registrarHistorial(struct nodoHistorial **, gchar[9], int *, int *, gboolea
 void limpiarHistorial(struct nodoHistorial **, int *, int *);
 void mostrarHistorial(struct nodoHistorial *);
 void recuperarTablero(struct nodoHistorial *, gchar (*)[9], gboolean *, estadoJuego *, int);
+gint generarTiro(gchar[9]);
 
 #endif // MODELO_H

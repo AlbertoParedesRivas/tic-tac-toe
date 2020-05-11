@@ -7,7 +7,9 @@ typedef struct
     GtkWidget *labelEstado;
     GtkWidget *ventanaInicial;
     GtkWidget *ventanaNombres;
+    GtkWidget *ventanaNombre;
     GtkWidget *campoJugadorX;
+    GtkWidget *campoJugadorXC;
     GtkWidget *campoJugadorO;
     GtkWidget *ventanaCargar;
     GtkWidget *ventanaGuardar;
@@ -60,7 +62,9 @@ int main(int argc, char *argv[])
     componentes->labelEstado = GTK_WIDGET(gtk_builder_get_object(constructor, "estadoJuego"));
     componentes->ventanaInicial = GTK_WIDGET(gtk_builder_get_object(constructor, "VentanaInicial"));
     componentes->ventanaNombres = GTK_WIDGET(gtk_builder_get_object(constructor, "NombresDosPersonas"));
+    componentes->ventanaNombre = GTK_WIDGET(gtk_builder_get_object(constructor, "ventanaNombre"));
     componentes->campoJugadorX = GTK_WIDGET(gtk_builder_get_object(constructor, "campoJugadorX"));
+    componentes->campoJugadorXC = GTK_WIDGET(gtk_builder_get_object(constructor, "campoJugadorXC"));
     componentes->campoJugadorO = GTK_WIDGET(gtk_builder_get_object(constructor, "campoJugadorO"));
     componentes->ventanaCargar = GTK_WIDGET(gtk_builder_get_object(constructor, "cargarArchivo"));
     componentes->ventanaGuardar = GTK_WIDGET(gtk_builder_get_object(constructor, "guardarArchivo"));
@@ -99,9 +103,7 @@ void botonPresionado(GtkButton *boton, componentesApp *componentes)
         componentes->turno = !componentes->turno;
         componentes->estadoDelJuego = obtenerEstadoDelJuego(componentes->tablero, bloquesGanadores);
         registrarHistorial(&componentes->historial, componentes->tablero, &componentes->idTablero, &componentes->tamanoHistorial, componentes->turno, componentes->estadoDelJuego);
-        mostrarTablero(componentes);
         // Se obtiene el estado del juego y se muestra en la interfaz si alguien gano, perdio o si fue empate
-
         if (componentes->estadoDelJuego == GANO_O)
         {
             componentes->textoEstado = g_strconcat(textoGanador, componentes->jugadorO, NULL);
@@ -116,6 +118,36 @@ void botonPresionado(GtkButton *boton, componentesApp *componentes)
         {
             gtk_label_set_text(GTK_LABEL(componentes->labelEstado), "¡El juego fue un empate!");
         }
+        // Seccion que genera el turno de la computadora
+        if (componentes->estadoDelJuego == JUGANDO)
+        {
+            if (componentes->computadora)
+            {
+                componentes->textoEstado = g_strconcat(texto, componentes->turno ? componentes->jugadorX : componentes->jugadorO, NULL);
+                gtk_label_set_text(GTK_LABEL(componentes->labelEstado), componentes->textoEstado);
+                numeroBoton = generarTiro(componentes->tablero);
+                componentes->tablero[numeroBoton] = componentes->turno ? 'o' : 'x';
+                componentes->turno = !componentes->turno;
+                componentes->estadoDelJuego = obtenerEstadoDelJuego(componentes->tablero, bloquesGanadores);
+                registrarHistorial(&componentes->historial, componentes->tablero, &componentes->idTablero, &componentes->tamanoHistorial, componentes->turno, componentes->estadoDelJuego);
+                if (componentes->estadoDelJuego == GANO_O)
+                {
+                    componentes->textoEstado = g_strconcat(textoGanador, componentes->jugadorO, NULL);
+                    gtk_label_set_text(GTK_LABEL(componentes->labelEstado), componentes->textoEstado);
+                }
+                else if (componentes->estadoDelJuego == GANO_X)
+                {
+                    componentes->textoEstado = g_strconcat(textoGanador, componentes->jugadorX, NULL);
+                    gtk_label_set_text(GTK_LABEL(componentes->labelEstado), componentes->textoEstado);
+                }
+                else if (componentes->estadoDelJuego == EMPATE)
+                {
+                    gtk_label_set_text(GTK_LABEL(componentes->labelEstado), "¡El juego fue un empate!");
+                }
+            }
+        }
+
+        mostrarTablero(componentes);
     }
 }
 
@@ -126,6 +158,14 @@ void nuevoJuegoPersona(GtkButton *boton, componentesApp *componentes)
     gtk_widget_show(componentes->ventanaNombres);
 }
 
+void nuevoJuegoComputadora(GtkButton *boton, componentesApp *componentes)
+{
+    componentes->computadora = TRUE;
+    componentes->jugadorO = "computadora";
+    gtk_widget_hide(componentes->ventanaInicial);
+    gtk_widget_show(componentes->ventanaNombre);
+}
+
 void guardarNombres(GtkButton *boton, componentesApp *componentes)
 {
     if (gtk_entry_get_text_length(GTK_ENTRY(componentes->campoJugadorX)) > 0 && gtk_entry_get_text_length(GTK_ENTRY(componentes->campoJugadorO)) > 0)
@@ -133,6 +173,16 @@ void guardarNombres(GtkButton *boton, componentesApp *componentes)
         componentes->jugadorX = g_strdup(gtk_entry_get_text(GTK_ENTRY(componentes->campoJugadorX)));
         componentes->jugadorO = g_strdup(gtk_entry_get_text(GTK_ENTRY(componentes->campoJugadorO)));
         gtk_widget_hide(componentes->ventanaNombres);
+        nuevoJuego(componentes);
+    }
+}
+
+void guardarNombre(GtkButton *boton, componentesApp *componentes)
+{
+    if (gtk_entry_get_text_length(GTK_ENTRY(componentes->campoJugadorXC)) > 0)
+    {
+        componentes->jugadorX = g_strdup(gtk_entry_get_text(GTK_ENTRY(componentes->campoJugadorXC)));
+        gtk_widget_hide(componentes->ventanaNombre);
         nuevoJuego(componentes);
     }
 }

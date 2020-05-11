@@ -113,7 +113,7 @@ void registrarHistorial(struct nodoHistorial **historial, gchar tablero[9], int 
                 temporalDos->anterior = temporal;
                 temporalDos->siguiente = NULL;
                 temporalDos->turno = turno;
-                temporalDos->estado = estado; 
+                temporalDos->estado = estado;
                 temporal->siguiente = temporalDos;
                 break;
             }
@@ -165,7 +165,8 @@ void registrarHistorial(struct nodoHistorial **historial, gchar tablero[9], int 
     }
 }
 
-void recuperarTablero(struct nodoHistorial *historial, gchar (*tablero)[9], gboolean *turno, estadoJuego *estado, const int idTablero){
+void recuperarTablero(struct nodoHistorial *historial, gchar (*tablero)[9], gboolean *turno, estadoJuego *estado, const int idTablero)
+{
     struct nodoHistorial *temporal = historial;
     if (historial == NULL)
     {
@@ -223,7 +224,17 @@ void limpiarHistorial(struct nodoHistorial **historial, int *idTablero, int *tam
         (*idTablero) = 1;
         (*tamanoHistorial) = 1;
     }
-    
+}
+
+gint generarTiro(gchar tablero[9])
+{
+    gint numero = 0;
+    srand(time(NULL));
+    do
+    {
+        numero = 1 + rand() % (10-1);
+    } while (tablero[numero] != '-');
+    return numero;
 }
 
 static gint revisarGanador(const gint combinacionesGanadoras[][3], const gint tamano, const gchar jugadorProbado, const char *tablero, gint *bloquesGanadores)

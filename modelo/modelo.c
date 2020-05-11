@@ -1,45 +1,60 @@
+/*
+* @file modelo.c
+*
+* @brief Archivo que contiene las funciones que tienen que ver
+* directamente con la lógica del juego de gato, como determinar ganador y generar
+* turno de la computadora
+* 
+* @authors  Perla Hernández Cardoso
+*           Areli Rabner Concha
+* @date 27/04/2020
+*/
 #include <gtk/gtk.h>
 #include "modelo.h"
 
-static gint revisarGanador(const gint combinacionesGanadoras[][3], const gint tamano, const gchar jugadorProbado, const char *tablero, gint *bloquesGanadores);
+static gint revisarGanador(const gint combinacionesGanadoras[][3], const gint tamano, const gchar jugadorProbado, const char *tablero);
 static gboolean tableroLleno(const gchar *tablero);
-static void mostrarTableroA(gchar[]);
 
 const gint combinacionesGanadorasHorizontales[3][3] = {{0, 1, 2}, {3, 4, 5}, {6, 7, 8}};
 const gint combinacionesGanadorasVerticales[3][3] = {{0, 3, 6}, {1, 4, 7}, {2, 5, 8}};
 const gint combinacionesGanadorasDiagonales[2][3] = {{0, 4, 8}, {2, 4, 6}};
-
-estadoJuego obtenerEstadoDelJuego(const gchar *tablero, gint *bloquesGanadores)
+/*
+* Función que verifica todas las opciones de victoria posibles en el tablero y determina un ganador o empate
+* @author   Perla Hernández Cardoso
+* @param    *tablero        Arreglo que representa el tablero de juego.
+* @return   estadoJuego
+*/
+estadoJuego obtenerEstadoDelJuego(const gchar *tablero)
 {
     estadoJuego estado = JUGANDO;
     gint resultado;
 
-    resultado = revisarGanador(combinacionesGanadorasHorizontales, 3, 'x', tablero, bloquesGanadores);
+    resultado = revisarGanador(combinacionesGanadorasHorizontales, 3, 'x', tablero);
     if (resultado > -1)
     {
         return GANO_X;
     }
-    resultado = revisarGanador(combinacionesGanadorasVerticales, 3, 'x', tablero, bloquesGanadores);
+    resultado = revisarGanador(combinacionesGanadorasVerticales, 3, 'x', tablero);
     if (resultado > -1)
     {
         return GANO_X;
     }
-    resultado = revisarGanador(combinacionesGanadorasDiagonales, 2, 'x', tablero, bloquesGanadores);
+    resultado = revisarGanador(combinacionesGanadorasDiagonales, 2, 'x', tablero);
     if (resultado > -1)
     {
         return GANO_X;
     }
-    resultado = revisarGanador(combinacionesGanadorasHorizontales, 3, 'o', tablero, bloquesGanadores);
+    resultado = revisarGanador(combinacionesGanadorasHorizontales, 3, 'o', tablero);
     if (resultado > -1)
     {
         return GANO_O;
     }
-    resultado = revisarGanador(combinacionesGanadorasVerticales, 3, 'o', tablero, bloquesGanadores);
+    resultado = revisarGanador(combinacionesGanadorasVerticales, 3, 'o', tablero);
     if (resultado > -1)
     {
         return GANO_O;
     }
-    resultado = revisarGanador(combinacionesGanadorasDiagonales, 2, 'o', tablero, bloquesGanadores);
+    resultado = revisarGanador(combinacionesGanadorasDiagonales, 2, 'o', tablero);
     if (resultado > -1)
     {
         return GANO_O;
@@ -52,38 +67,22 @@ estadoJuego obtenerEstadoDelJuego(const gchar *tablero, gint *bloquesGanadores)
 
     return estado;
 }
-
-static void mostrarTableroA(gchar tablero[9])
-{
-    int c = 0;
-    for (int i = 0; i < 3; i++)
-    {
-        for (int j = 0; j < 3; j++)
-        {
-            printf("%c", tablero[c]);
-            c++;
-        }
-        printf("\n");
-    }
-}
-
-void mostrarHistorial(struct nodoHistorial *historial)
-{
-    if (!historial)
-    {
-        printf("Historial vacio\n");
-    }
-    struct nodoHistorial *temporal = historial;
-    while (temporal)
-    {
-        printf("id:%d\n", temporal->id);
-        mostrarTableroA(temporal->tablero);
-        temporal = temporal->siguiente;
-    }
-}
-
+/*
+* Función que ingresa en la estructura del historial una entrada nueva con el tablero, su id, el turno y el estado de juego actual. Si la entrada a registrar
+* no se quiere ingresa al final de la lista, se borran todas las entradas que están después del nuevo registro para que sea el nuevo final de la lista
+* También actualiza el tamaño total del historial
+* @author   Areli Rabner Concha
+* @param    **historial         Apuntador a la estructura del historial.
+* @param    tablero             Arreglo que representa el tablero de juego.
+* @param    *idTablero          ID con el que se guardará el tablero en el historial.
+* @param    *tamanoHistorial    Entero con el numero de entradas en el historial.
+* @param    turno               Boolean que controla el turno de los jugadores.
+* @param    estado              Estado actual del juego.
+* @return   void
+*/
 void registrarHistorial(struct nodoHistorial **historial, gchar tablero[9], int *idTablero, int *tamanoHistorial, gboolean turno, estadoJuego estado)
 {
+    // Si el historial está vacio se crea la primer entrada.
     if ((*historial) == NULL)
     {
         (*historial) = (struct nodoHistorial *)malloc(sizeof(struct nodoHistorial));
@@ -100,11 +99,12 @@ void registrarHistorial(struct nodoHistorial **historial, gchar tablero[9], int 
 
     struct nodoHistorial *temporal = (*historial);
     struct nodoHistorial *temporalDos = NULL, *temporalEliminar = NULL;
-
     if ((*idTablero) == (*tamanoHistorial))
     {
+        // Sección que ingresa una entrada al final de la estructura.
         while (temporal)
         {
+            // Si llegamos al final de la lista se ingresa una nueva entrada con los datos correspondientes
             if (temporal->siguiente == NULL)
             {
                 temporalDos = (struct nodoHistorial *)malloc(sizeof(struct nodoHistorial));
@@ -125,12 +125,15 @@ void registrarHistorial(struct nodoHistorial **historial, gchar tablero[9], int 
         (*idTablero) = (*idTablero) + 1;
         (*tamanoHistorial) = (*tamanoHistorial) + 1;
     }
+    // Si se quiere ingresar una entrada en alguna posición que no es el final, se borran las entradas que siguen después a la nueva entrada.
     else if ((*idTablero) < (*tamanoHistorial))
     {
         while (temporal)
         {
             if (temporal->siguiente == NULL)
             {
+                //Se recorre el historial desde el final hasta la entrada donde se quiere ingresar el nuevo registro, eliminando las entradas necesarias para que 
+                //el nuevo registro sea el último en la lista
                 do
                 {
                     if (temporal->id == (*idTablero))
@@ -164,7 +167,16 @@ void registrarHistorial(struct nodoHistorial **historial, gchar tablero[9], int 
         (*tamanoHistorial) = (*idTablero);
     }
 }
-
+/*
+* Función que se encarga de cargar en los variables correspondientes una entrada del historial
+* @author   Perla Hernández Cardoso
+* @param    *historial      Apuntador a la estructura del historial.
+* @param    *tablero[9]     Arreglo que representa el tablero de juego.
+* @param    turno           Boolean que controla el turno de los jugadores.
+* @param    estado          Estado actual del juego.
+* @param    idTablero       ID con el que se guardará el tablero en el historial.
+* @return   void
+*/
 void recuperarTablero(struct nodoHistorial *historial, gchar (*tablero)[9], gboolean *turno, estadoJuego *estado, const int idTablero)
 {
     struct nodoHistorial *temporal = historial;
@@ -190,7 +202,14 @@ void recuperarTablero(struct nodoHistorial *historial, gchar (*tablero)[9], gboo
         }
     }
 }
-
+/*
+* Función que limpia todas las entradas del historial excepto la primera (tablero vacio) y actualiza el tamaño del historial.
+* @author   Areli Rabner Concha
+* @param    **historial         Apuntador a la estructura del historial.
+* @param    *idTablero          ID con el que se guardará el tablero en el historial.
+* @param    *tamanoHistorial    Entero con el numero de entradas en el historial.
+* @return   void
+*/
 void limpiarHistorial(struct nodoHistorial **historial, int *idTablero, int *tamanoHistorial)
 {
     struct nodoHistorial *temporal = (*historial), *temporalEliminar = NULL;
@@ -225,7 +244,12 @@ void limpiarHistorial(struct nodoHistorial **historial, int *idTablero, int *tam
         (*tamanoHistorial) = 1;
     }
 }
-
+/*
+* Función que genera un tiro para jugar contra la computadora
+* @author   Perla Hernández Cardoso
+* @param    tablero             Arreglo que representa el tablero de juego.
+* @return   gint
+*/
 gint generarTiro(gchar tablero[9])
 {
     gint numero = 0;
@@ -236,8 +260,16 @@ gint generarTiro(gchar tablero[9])
     } while (tablero[numero] != '-');
     return numero;
 }
-
-static gint revisarGanador(const gint combinacionesGanadoras[][3], const gint tamano, const gchar jugadorProbado, const char *tablero, gint *bloquesGanadores)
+/*
+* Función que revisa si el caracter recibido se encuentra en un estado ganador en el tablero
+* @author   Perla Hernández Cardoso
+* @param    combinacionesGanadoras[][3]     Arreglo de arreglos que contiene las combinaciones posibles de victoria.
+* @param    tamano                          Numero de arreglos almacenados en combinacionesGanadoras.
+* @param    jugadorProbado                  Caracter que representa al ganador que se está evaluando.
+* @param    *tablero                        Arreglo que representa el tablero de juego.
+* @return   gint
+*/
+static gint revisarGanador(const gint combinacionesGanadoras[][3], const gint tamano, const gchar jugadorProbado, const char *tablero)
 {
     gint i, j;
     gint contador = 0;
@@ -249,7 +281,6 @@ static gint revisarGanador(const gint combinacionesGanadoras[][3], const gint ta
         {
             if (jugadorProbado == tablero[combinacionesGanadoras[i][j]])
             {
-                bloquesGanadores[j] = combinacionesGanadoras[i][j];
                 contador++;
                 if (contador == 3)
                 {
@@ -261,7 +292,12 @@ static gint revisarGanador(const gint combinacionesGanadoras[][3], const gint ta
 
     return -1;
 }
-
+/*
+* Función que revisa si el tablero se encuentra lleno.
+* @author   Perla Hernández Cardoso
+* @param    *tablero             Arreglo que representa el tablero de juego.
+* @return   gboolean
+*/
 static gboolean tableroLleno(const gchar *tablero)
 {
     int i;

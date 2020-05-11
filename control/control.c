@@ -1,3 +1,16 @@
+/*
+* @file control.c
+*
+* @brief Este archivo contiene las funciones que interactuan directamente
+* con la vista del programa del juego de gato. Se obtienen los nombres de
+* los participantes y se puede jugar solo o con otra persona, tambien se puede
+* guardar la partida en un archivo asi como recuperarla.
+* 
+* @authors  Perla Hernández Cardoso
+*           Areli Rabner Concha
+* @date 27/04/2020
+*/
+
 #include <gtk/gtk.h>
 #include "../modelo/modelo.h"
 
@@ -35,6 +48,14 @@ void mostrarTablero(componentesApp *);
 void guardarPartida(componentesApp *, gchar *);
 void cargarPartida(componentesApp *, gchar *);
 
+/*
+* En la función main se inicializan las vistas y las estructuras que guardan información
+* que se recopila en la interfaz y el historial.
+* @author   Perla Hernández Cardoso
+* @param    *argv[]    Arreglo de cadenas donde se guardan los argumentos del programa
+* @param    argc       Variable que contiene el numero de argumentos del programa
+* @return   int
+*/
 int main(int argc, char *argv[])
 {
     GtkBuilder *constructor;
@@ -80,10 +101,19 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+/*
+* Esta funcion se ejecuta cuando se da clic en los botones del tablero del juego de gato para registrar un turno.
+* Se registra el turno en la variable de tablero, se actualiza la estructura de historial y se actualiza la interfaz
+* con el turno registrado. También se encuentra el bloque de código que genera el turno automático cuando solo está
+* jugando una persona.
+* @author   Areli Rabner Concha
+* @param    *boton          Apuntador al objeto boton que fue presionado en la interfaz
+* @param    *componentes    Estructura que contiene las variables principales del programa
+* @return   void
+*/
 void botonPresionado(GtkButton *boton, componentesApp *componentes)
 {
     gint numeroBoton;
-    gint bloquesGanadores[3] = {0};
     const gchar texto[] = "Turno de ";
     const gchar textoGanador[] = "Gano ";
     if (componentes->estadoDelJuego != JUGANDO)
@@ -101,7 +131,7 @@ void botonPresionado(GtkButton *boton, componentesApp *componentes)
         componentes->tablero[numeroBoton] = componentes->turno ? 'o' : 'x';
         // Se registra el tablero actualizado en el historial y se muestra el tablero actualizado
         componentes->turno = !componentes->turno;
-        componentes->estadoDelJuego = obtenerEstadoDelJuego(componentes->tablero, bloquesGanadores);
+        componentes->estadoDelJuego = obtenerEstadoDelJuego(componentes->tablero);
         registrarHistorial(&componentes->historial, componentes->tablero, &componentes->idTablero, &componentes->tamanoHistorial, componentes->turno, componentes->estadoDelJuego);
         // Se obtiene el estado del juego y se muestra en la interfaz si alguien gano, perdio o si fue empate
         if (componentes->estadoDelJuego == GANO_O)
@@ -128,7 +158,7 @@ void botonPresionado(GtkButton *boton, componentesApp *componentes)
                 numeroBoton = generarTiro(componentes->tablero);
                 componentes->tablero[numeroBoton] = componentes->turno ? 'o' : 'x';
                 componentes->turno = !componentes->turno;
-                componentes->estadoDelJuego = obtenerEstadoDelJuego(componentes->tablero, bloquesGanadores);
+                componentes->estadoDelJuego = obtenerEstadoDelJuego(componentes->tablero);
                 registrarHistorial(&componentes->historial, componentes->tablero, &componentes->idTablero, &componentes->tamanoHistorial, componentes->turno, componentes->estadoDelJuego);
                 if (componentes->estadoDelJuego == GANO_O)
                 {
@@ -146,26 +176,49 @@ void botonPresionado(GtkButton *boton, componentesApp *componentes)
                 }
             }
         }
-
         mostrarTablero(componentes);
     }
 }
-
+/*
+* Función que se ejecuta al momento de que el usuario elige un nuevo juego contra otra persona,
+* se oculta la ventana inicial y se muestra la ventana donde se capturan los nombres de las personas
+* que jugarán.
+* @author   Perla Hernández Cardoso
+* @param    *boton       Apuntador al objeto boton que fue presionado en la interfaz
+* @param    *componentes Estructura que contiene las variables principales del programa
+* @return   void
+*/
 void nuevoJuegoPersona(GtkButton *boton, componentesApp *componentes)
 {
     componentes->computadora = FALSE;
     gtk_widget_hide(componentes->ventanaInicial);
     gtk_widget_show(componentes->ventanaNombres);
 }
-
+/*
+* Función que se ejecuta al momento de que el usuario elige un nuevo juego contra la computadora,
+* se oculta la ventana inicial y se muestra la ventana donde se captura el nombre de la persona
+* que jugará
+* @author   Areli Rabner Concha
+* @param    *boton       Apuntador al objeto boton que fue presionado en la interfaz
+* @param    *componentes Estructura que contiene las variables principales del programa
+* @return   void
+*/
 void nuevoJuegoComputadora(GtkButton *boton, componentesApp *componentes)
 {
+    gchar computadora[] = "computadora";
     componentes->computadora = TRUE;
-    componentes->jugadorO = "computadora";
+    componentes->jugadorO = g_strdup(computadora);
     gtk_widget_hide(componentes->ventanaInicial);
     gtk_widget_show(componentes->ventanaNombre);
 }
-
+/*
+* Función que recupera los nombres de los campos de la interfaz para guardarlos en la
+* estructura que guarda los datos del programa. Después inicia un nuevo juego.
+* @author   Perla Hernández Cardoso
+* @param    *boton       Apuntador al objeto boton que fue presionado en la interfaz
+* @param    *componentes Estructura que contiene las variables principales del programa
+* @return   void
+*/
 void guardarNombres(GtkButton *boton, componentesApp *componentes)
 {
     if (gtk_entry_get_text_length(GTK_ENTRY(componentes->campoJugadorX)) > 0 && gtk_entry_get_text_length(GTK_ENTRY(componentes->campoJugadorO)) > 0)
@@ -176,7 +229,14 @@ void guardarNombres(GtkButton *boton, componentesApp *componentes)
         nuevoJuego(componentes);
     }
 }
-
+/*
+* Función que recupera el nombre del campo de la interfaz para guardarlo en la
+* estructura que guarda los datos del programa. Después inicia un nuevo juego.
+* @author   Areli Rabner Concha
+* @param    *boton       Apuntador al objeto boton que fue presionado en la interfaz
+* @param    *componentes Estructura que contiene las variables principales del programa
+* @return   void
+*/
 void guardarNombre(GtkButton *boton, componentesApp *componentes)
 {
     if (gtk_entry_get_text_length(GTK_ENTRY(componentes->campoJugadorXC)) > 0)
@@ -186,7 +246,13 @@ void guardarNombre(GtkButton *boton, componentesApp *componentes)
         nuevoJuego(componentes);
     }
 }
-
+/*
+* Función que inicializa el tablero y los componentes de la interfaz para iniciar un
+* nuevo juego.
+* @author   Perla Hernández Cardoso
+* @param    *componentes Estructura que contiene las variables principales del programa
+* @return   void
+*/
 void nuevoJuego(componentesApp *componentes)
 {
     const gchar cadena[] = "Turno de ";
@@ -204,7 +270,12 @@ void nuevoJuego(componentesApp *componentes)
     limpiarHistorial(&componentes->historial, &componentes->idTablero, &componentes->tamanoHistorial);
     componentes->estadoDelJuego = JUGANDO;
 }
-
+/*
+* Función que muestra en pantalla el tablero activo en el historial
+* @author   Areli Rabner Concha
+* @param    *componentes Estructura que contiene las variables principales del programa
+* @return   void
+*/
 void mostrarTablero(componentesApp *componentes)
 {
     struct nodoHistorial *historial = componentes->historial;
@@ -240,13 +311,20 @@ void mostrarTablero(componentesApp *componentes)
         }
     }
 }
-
+/*
+* Función que se ejecuta para mostrar jugadas anteriores del historial de partida.
+* @author   Perla Hernández Cardoso
+* @param    *boton       Apuntador al objeto boton que fue presionado en la interfaz
+* @param    *componentes Estructura que contiene las variables principales del programa
+* @return   void
+*/
 void mostrarJugadaAnterior(GtkButton *boton, componentesApp *componentes)
 {
     const gchar texto[] = "Turno de ";
     const gchar textoGanador[] = "Gano ";
     if (componentes->idTablero != 1)
     {
+        // Sección de código que se encarga de regresar dos jugadas en el historial si se está jugando contra la computadora 
         if (componentes->computadora)
         {
             if (componentes->idTablero == componentes->tamanoHistorial)
@@ -270,6 +348,7 @@ void mostrarJugadaAnterior(GtkButton *boton, componentesApp *componentes)
             componentes->idTablero--;
         }
         recuperarTablero(componentes->historial, &componentes->tablero, &componentes->turno, &componentes->estadoDelJuego, componentes->idTablero);
+        //Sección que actualiza el label de estado en la interfaz
         componentes->textoEstado = g_strconcat(texto, componentes->turno ? componentes->jugadorO : componentes->jugadorX, NULL);
         gtk_label_set_text(GTK_LABEL(componentes->labelEstado), componentes->textoEstado);
         if (componentes->estadoDelJuego == GANO_O)
@@ -289,13 +368,20 @@ void mostrarJugadaAnterior(GtkButton *boton, componentesApp *componentes)
     }
     mostrarTablero(componentes);
 }
-
+/*
+* Función que se ejecuta para mostrar jugadas siguientes del historial de partida.
+* @author   Areli Rabner Concha
+* @param    *boton       Apuntador al objeto boton que fue presionado en la interfaz
+* @param    *componentes Estructura que contiene las variables principales del programa
+* @return   void
+*/
 void mostrarJugadaSiguiente(GtkButton *boton, componentesApp *componentes)
 {
     const gchar texto[] = "Turno de ";
     const gchar textoGanador[] = "Gano ";
     if (componentes->idTablero < componentes->tamanoHistorial)
     {
+        // Sección de código que se encarga de regresar dos jugadas en el historial si se está jugando contra la computadora 
         if (componentes->computadora)
         {
             if (componentes->idTablero == componentes->tamanoHistorial - 1)
@@ -311,6 +397,7 @@ void mostrarJugadaSiguiente(GtkButton *boton, componentesApp *componentes)
         {
             componentes->idTablero++;
         }
+        //Sección que actualiza el label de estado en la interfaz
         recuperarTablero(componentes->historial, &componentes->tablero, &componentes->turno, &componentes->estadoDelJuego, componentes->idTablero);
         componentes->textoEstado = g_strconcat(texto, componentes->turno ? componentes->jugadorO : componentes->jugadorX, NULL);
         gtk_label_set_text(GTK_LABEL(componentes->labelEstado), componentes->textoEstado);
@@ -331,12 +418,20 @@ void mostrarJugadaSiguiente(GtkButton *boton, componentesApp *componentes)
     }
     mostrarTablero(componentes);
 }
-
+/*
+* Función que se ejecuta para terminar el proceso de gtk al momento de que se cierra la ventana principal.
+* @author   Perla Hernández Cardoso
+* @return   void
+*/
 void on_window_main_destroy()
 {
     gtk_main_quit();
 }
-
+/*
+* Función que abre la ventana que muestra la vista de acerca de.
+* @author   Areli Rabner Concha
+* @return   void
+*/
 void mostrarAcercaDe()
 {
     GtkBuilder *constructor;
@@ -352,7 +447,11 @@ void mostrarAcercaDe()
     gtk_window_set_modal(GTK_WINDOW(ventanaAcercaDe), TRUE);
     gtk_widget_show_all(ventanaAcercaDe);
 }
-
+/*
+* Función que abre la ventana que muestra la vista de como jugar.
+* @author   Areli Rabner Concha
+* @return   void
+*/
 void mostrarComoJugar()
 {
     GtkBuilder *constructor;
@@ -368,7 +467,14 @@ void mostrarComoJugar()
     gtk_window_set_modal(GTK_WINDOW(ventanaComoJugar), TRUE);
     gtk_widget_show_all(ventanaComoJugar);
 }
-
+/*
+* Función que muestra la ventana inicial al iniciar el programa.
+* @author   Perla Hernández Cardoso
+* @param    *window         Apuntador al objeto ventana en la que se generó el evento
+* @param      *widget         Apuntador al objeto widget al que se le hizo focus
+* @param    *componentes    Estructura que contiene las variables principales del programa
+* @return   void
+*/
 void mostrarVentanaInicial(GtkWindow *window, GtkWidget *widget, componentesApp *componentes)
 {
     if (componentes->inicial)
@@ -377,23 +483,13 @@ void mostrarVentanaInicial(GtkWindow *window, GtkWidget *widget, componentesApp 
         componentes->inicial = FALSE;
     }
 }
-
-void mostrarCampoNombreVsJugador()
-{
-    GtkBuilder *constructor;
-    GtkWidget *ventanaCampoNombresVsPersona = NULL;
-
-    constructor = gtk_builder_new();
-    gtk_builder_add_from_file(constructor, "vista/ventanaCampoNombresVsPersona.ui", NULL);
-
-    ventanaCampoNombresVsPersona = GTK_WIDGET(gtk_builder_get_object(constructor, "ventanaCampoNombresVsPersona"));
-
-    g_object_unref(G_OBJECT(constructor));
-
-    gtk_window_set_modal(GTK_WINDOW(ventanaCampoNombresVsPersona), TRUE);
-    gtk_widget_show_all(ventanaCampoNombresVsPersona);
-}
-
+/*
+* Función que muetra el selector de archivo y recupera la dirección del archivo que contiene la partida
+* @author   Areli Rabner Concha
+* @param    *boton       Apuntador al objeto boton que fue presionado en la interfaz
+* @param    *componentes Estructura que contiene las variables principales del programa
+* @return   void
+*/
 void mostrarCargarPartida(GtkMenuItem *boton, componentesApp *componentes)
 {
     gchar *nombreArchivo = NULL; // Name of file to open from dialog box
@@ -405,7 +501,6 @@ void mostrarCargarPartida(GtkMenuItem *boton, componentesApp *componentes)
         nombreArchivo = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(componentes->ventanaCargar));
         if (nombreArchivo != NULL)
         {
-            printf("%s\n", nombreArchivo);
             cargarPartida(componentes, nombreArchivo);
         }
         g_free(nombreArchivo);
@@ -413,7 +508,13 @@ void mostrarCargarPartida(GtkMenuItem *boton, componentesApp *componentes)
 
     gtk_widget_hide(componentes->ventanaCargar);
 }
-
+/*
+* Función que muetra el selector de archivo y recupera la dirección del archivo nuevo para guardar la partida
+* @author   Perla Hernández Cardoso
+* @param    *boton       Apuntador al objeto boton que fue presionado en la interfaz
+* @param    *componentes Estructura que contiene las variables principales del programa
+* @return   void
+*/
 void mostrarGuardarPartida(GtkMenuItem *boton, componentesApp *componentes)
 {
     gchar *nombreArchivo = NULL; // Name of file to open from dialog box
@@ -426,14 +527,19 @@ void mostrarGuardarPartida(GtkMenuItem *boton, componentesApp *componentes)
         if (nombreArchivo != NULL)
         {
             guardarPartida(componentes, nombreArchivo);
-            printf("%s\n", nombreArchivo);
         }
         g_free(nombreArchivo);
     }
 
     gtk_widget_hide(componentes->ventanaGuardar);
 }
-
+/*
+* Función que guarda los datos de la partida en un archivo
+* @author   Perla Hernández Cardoso
+* @param    *componentes Estructura que contiene las variables principales del programa
+* @param    *gchar       Apuntador a la cadena de la ruta del archivo
+* @return   void
+*/
 void guardarPartida(componentesApp *componentes, gchar *direccionArchivo)
 {
     FILE *guardado;
@@ -469,30 +575,47 @@ void guardarPartida(componentesApp *componentes, gchar *direccionArchivo)
 
     fclose(guardado);
 }
-
+/*
+* Función que carga los datos de la partida de un archivo
+* @author   Areli Rabner Concha
+* @param    *componentes Estructura que contiene las variables principales del programa
+* @param    *gchar       Apuntador a la cadena de la ruta del archivo
+* @return   void
+*/
 void cargarPartida(componentesApp *componentes, gchar *direccionArchivo)
 {
     FILE *archivo;
+    char computadora[] = "computadora\0";
     archivo = fopen(direccionArchivo, "r");
-    char buffer[128], jugadorX[50], jugadorO[50], tablero[9], numero[2];
+    char buffer[128], tablero[9], numero[2];
     int contador = 0;
     limpiarHistorial(&componentes->historial, &componentes->idTablero, &componentes->tamanoHistorial);
+    // Ciclo que recupera una linea del archivo de guardado y almacena los datos en sus respectivas variables
     while (fgets(buffer, sizeof(buffer), archivo))
     {
         buffer[strlen(buffer) - 1] = '\0';
         if (contador == 0)
         {
-            strcpy(componentes->jugadorX, buffer);
+            componentes->jugadorX = g_strdup(buffer);
         }
         else if (contador == 1)
         {
-            strcpy(componentes->jugadorO, buffer);
+            componentes->jugadorO = g_strdup(buffer);
+            if (g_strcmp0(computadora, componentes->jugadorO) == 0)
+            {
+                componentes->computadora = TRUE;
+            }
+            else
+            {
+                componentes->computadora = FALSE;
+            }
+            
+            
         }
         else if (contador == 2)
         {
             numero[0] = buffer[0];
             numero[1] = '\0';
-            // printf("2:%d\n", atoi(numero));
             componentes->turno = atoi(numero);
         }
         else if (contador == 3)
@@ -500,7 +623,6 @@ void cargarPartida(componentesApp *componentes, gchar *direccionArchivo)
             numero[0] = buffer[0];
             numero[1] = '\0';
             componentes->estadoDelJuego = atoi(numero);
-            // printf("3:%d\n", atoi(numero));
         }
         else if (contador == 4)
         {
@@ -521,6 +643,7 @@ void cargarPartida(componentesApp *componentes, gchar *direccionArchivo)
     }
     const gchar texto[] = "Turno de ";
     const gchar textoGanador[] = "Gano ";
+    //Muestra la última jugada del historial y determina el estado del juego.
     recuperarTablero(componentes->historial, &componentes->tablero, &componentes->turno, &componentes->estadoDelJuego, componentes->idTablero);
     componentes->textoEstado = g_strconcat(texto, componentes->turno ? componentes->jugadorO : componentes->jugadorX, NULL);
     gtk_label_set_text(GTK_LABEL(componentes->labelEstado), componentes->textoEstado);
@@ -539,6 +662,5 @@ void cargarPartida(componentesApp *componentes, gchar *direccionArchivo)
         gtk_label_set_text(GTK_LABEL(componentes->labelEstado), "¡El juego fue un empate!");
     }
     mostrarTablero(componentes);
-    // printf("1:%s 2:%s", jugadorX, jugadorO);
     fclose(archivo);
 }

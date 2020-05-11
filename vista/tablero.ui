@@ -1,5 +1,14 @@
+<!-- 
+  @file tablero.ui
+
+  @brief Vista de la pantalla principal, contiene el tablero, la pantalla inicial, las pantallas donde se
+  capturan los nombres y los selectores de archivo
+  
+  @authors  Perla Hernández Cardoso
+            Areli Rabner Concha
+  @date 29/04/2020
+ -->
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.22.2 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkWindow" id="NombresDosPersonas">
@@ -304,7 +313,6 @@
   </object>
   <object class="GtkWindow" id="TicTacToe">
     <property name="can_focus">False</property>
-    <property name="resizable">False</property>
     <property name="default_width">640</property>
     <property name="default_height">480</property>
     <signal name="destroy" handler="on_window_main_destroy" swapped="no"/>

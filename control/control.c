@@ -247,7 +247,28 @@ void mostrarJugadaAnterior(GtkButton *boton, componentesApp *componentes)
     const gchar textoGanador[] = "Gano ";
     if (componentes->idTablero != 1)
     {
-        componentes->idTablero--;
+        if (componentes->computadora)
+        {
+            if (componentes->idTablero == componentes->tamanoHistorial)
+            {
+                if ((componentes->tamanoHistorial % 2) == 0)
+                {
+                    componentes->idTablero--;
+                }
+                else
+                {
+                    componentes->idTablero -= 2;
+                }
+            }
+            else
+            {
+                componentes->idTablero -= 2;
+            }
+        }
+        else
+        {
+            componentes->idTablero--;
+        }
         recuperarTablero(componentes->historial, &componentes->tablero, &componentes->turno, &componentes->estadoDelJuego, componentes->idTablero);
         componentes->textoEstado = g_strconcat(texto, componentes->turno ? componentes->jugadorO : componentes->jugadorX, NULL);
         gtk_label_set_text(GTK_LABEL(componentes->labelEstado), componentes->textoEstado);
@@ -273,9 +294,23 @@ void mostrarJugadaSiguiente(GtkButton *boton, componentesApp *componentes)
 {
     const gchar texto[] = "Turno de ";
     const gchar textoGanador[] = "Gano ";
-    if (componentes->idTablero != componentes->tamanoHistorial)
+    if (componentes->idTablero < componentes->tamanoHistorial)
     {
-        componentes->idTablero++;
+        if (componentes->computadora)
+        {
+            if (componentes->idTablero == componentes->tamanoHistorial - 1)
+            {
+                componentes->idTablero++;
+            }
+            else
+            {
+                componentes->idTablero += 2;
+            }
+        }
+        else
+        {
+            componentes->idTablero++;
+        }
         recuperarTablero(componentes->historial, &componentes->tablero, &componentes->turno, &componentes->estadoDelJuego, componentes->idTablero);
         componentes->textoEstado = g_strconcat(texto, componentes->turno ? componentes->jugadorO : componentes->jugadorX, NULL);
         gtk_label_set_text(GTK_LABEL(componentes->labelEstado), componentes->textoEstado);
